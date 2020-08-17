@@ -1,5 +1,5 @@
 import Sorting_Algorithms as SA
-
+import Draw_Algorithms as DA
 #global variable declarations
 ArrayToSort = [] #random array to be sorted
 SortAnimations = [] #animation info from sorting algorithm
@@ -67,11 +67,11 @@ def draw():
     rect(offsetPercent*controlWidth, 0.55*controlHeight, controlWidth*(1- 2*offsetPercent), 0.35*controlHeight)
     
     #Bubble Button
-    ellipse(7*width/9, controlHeight/4, controlHeight/4, controlHeight/4)
+    rect(offsetPercent*controlWidth + 2*controlWidth, offsetPercent*controlHeight, controlWidth*(1- 2*offsetPercent), 0.35*controlHeight)
     
     #Merge Button
-    ellipse(8*width/9, controlHeight/4, controlHeight/4, controlHeight/4)
-    
+    rect(offsetPercent*controlWidth + 2*controlWidth, 0.55*controlHeight, controlWidth*(1- 2*offsetPercent), 0.35*controlHeight)
+    #DA.DrawTest(offsetPercent, controlWidth, controlHeight)
     
     
     #fill control box with controls
@@ -80,7 +80,10 @@ def draw():
     
     rectwidth = width / NumOfValues
     
-    
+    #yeah there's probably a better way to make this work without doing this, but it works for now...
+    ArrayToSort, SortAnimations, AnimationIndex, isAnimating = DA.DrawBubble(ArrayToSort, SortAnimations, AnimationIndex, isAnimating, rectwidth)
+
+    """
     if len(SortAnimations) == 0:
         #draw the unsorted array
         drawArray(ArrayToSort, rectwidth, [255])
@@ -120,8 +123,10 @@ def draw():
         else:
             #animation has finished, color final sorted array green
             drawArray(ArrayToSort, rectwidth, [0, 255, 0])
+    """
 
-    #check for key presses
+
+    #check for key pressed
     if keyPressed:
         if key == 's':
             startSort()
