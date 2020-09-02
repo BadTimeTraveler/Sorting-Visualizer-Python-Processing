@@ -10,10 +10,13 @@ SortAnimations = [] #animation info from sorting algorithm
 resolution = [1290, 720]
 rectwidth = 0
 
+colorHSB = False
+fr = 30
+
 AnimationIndex = 0
 CountingIndex = 0
 isAnimating = False
-ReadyToSort = True
+ReadyToSort = False
 #Counters for drawing MergeSort
 MergeCount = 0
 prevStart = 0
@@ -35,35 +38,36 @@ Algorithm = 'Bubble' #Bubble is the default animation
 
 def setup():
     global ArrayToSort, NumOfValues, controlHeight, controlWidth, offsetPercent, rectwidth
-    global ArraySizeScrollbar, FrameRateScrollbar
+    global ArraySizeScrollbar, FrameRateScrollbar, colorHSB, prevArrayPos, prevFramePos, f
     
     size(*resolution)
     
     controlHeight = floor(0.15*height) # Total height of control box
     controlWidth = floor(width/3) # 1/3 total width of control box eg: width of control sub boxes
     offsetPercent = 0.1
+    #colorMode(HSB, controlHeight, controlHeight, controlHeight)
+    #colorHSB = True
     
-    noStroke()
+    #noStroke()
     ArraySizeScrollbar = HScrollbar(controlWidth, controlHeight / 2 - 8, controlWidth, 16, 16)
     FrameRateScrollbar = HScrollbar(controlWidth, controlHeight - 8, controlWidth, 16, 16)
     
-    NumOfValues = floor(width/10)
-    #NumOfValues = 50
-    rectwidth = width / NumOfValues
+    prevArrayPos = width / 2
+    prevFramePos = width / 2
     
+    NumOfValues = floor(width/10)
+    rectwidth = width / NumOfValues
     
     GenerateArray()
     
+    f = createFont("Arial", 16, True)
     
-    #frameRate(2)
-
-
 ####################################################################################################
 
 
 def draw():
     global ArrayToSort, NumOfValues, controlHeight, controlWidth, offsetPercent, isAnimating, AnimationIndex, SortAnimations, SortedArray, ReadyToSort, MergeCount, prevStart, rectwidth
-    global ArraySizeScrollbar, FrameRateScrollbar
+    global ArraySizeScrollbar, FrameRateScrollbar, prevArrayPos, prevFramePos, f, fr
     mouseClick()
     update(mouseX, mouseY)
     background(0)
@@ -94,6 +98,25 @@ def draw():
     line(2*controlWidth, controlHeight/3, 3*controlWidth, controlHeight/3)
     line(2*controlWidth, 2*controlHeight/3, 3*controlWidth, 2*controlHeight/3)
     
+    #draw text for control buttons
+    textFont(f, 36)
+    fill(0)
+    textAlign(CENTER)
+    #Left
+    text("Generate New Array", controlWidth/2, controlHeight/3)
+    text("Start Sorting", controlWidth/2, 5*controlHeight/6)
+    #Mid
+    textFont(f, 24)
+    text("Array Size: " + str(NumOfValues), 1.5*controlWidth, controlHeight/4)
+    text("FrameRate: " + str(fr), 1.5*controlWidth, 3*controlHeight/4)
+    #Right
+    text("Bubble Sort", 2.25*controlWidth, controlHeight/4)
+    text("Merge Sort", 2.75*controlWidth, controlHeight/4)
+    text("Quick Sort", 2.25*controlWidth, 7*controlHeight/12)
+    text("Gravity Sort", 2.75*controlWidth, 7*controlHeight/12)
+    text("Counting Sort", 2.25*controlWidth, 11*controlHeight/12)
+    text("RadixLSD Sort", 2.75*controlWidth, 11*controlHeight/12)
+    
     #Would us dictionary unpacking if this was Python 3...
     if Algorithm == 'Bubble':
         DrawBubble()
@@ -113,6 +136,24 @@ def draw():
     ArraySizeScrollbar.display()
     FrameRateScrollbar.update()
     FrameRateScrollbar.display()
+    
+    curArrayPos = ArraySizeScrollbar.getPos()
+    curFramePos = FrameRateScrollbar.getPos()
+    
+    # map numofvalues to be between 10 and width/2
+    if curArrayPos !=  prevArrayPos:
+        NumOfValues = int(map(curArrayPos, 447, 861, 10, width/2))
+        rectwidth = float(width) / NumOfValues
+        GenerateArray()
+        prevArrayPos = curArrayPos
+    
+    # map framerate to be between 2 and 60
+    if curFramePos != prevFramePos:
+        fr = int(map(curFramePos, 447, 861, 2, 60))
+        frameRate(fr)
+        prevFramePos = curFramePos
+    
+    
     """
     #This breaks the sorting algorithm if 'n' is held down for a few seconds... no idea why.
     #check for key pressed
@@ -123,18 +164,9 @@ def draw():
             GenerateArray()
     """
     
-    """
-    if OverBubble:
-        print("over bubble")
-    elif OverMerge:
-        print("over merge")
-    else:
-        pass
-    """
-    
 ####################################################################################################
 
-    
+        
 def GenerateArray(): 
     global NumOfValues, ArrayToSort, SortedArray, SortAnimations, ReadyToSort, AnimationIndex, isAnimating
     isAnimating = False
@@ -150,15 +182,13 @@ def GenerateArray():
                                     
 
 def startSort():
-    global ArrayToSort, SortedArray, SortAnimations, ReadyToSort, isAnimating
-    SortAnimations = []
-    SortedArray = []
-    
+    global ArrayToSort, SortedArray, ReadyToSort, isAnimating
+    reset()
+            
     if not ReadyToSort:
         return
     
-    #SortAnimations = BubbleSort(list(ArrayToSort)) #would use .copy() but processing isn't Python 3...
-    #SortedArray = MergeSort(list(ArrayToSort))
+    #SortedArray = MergeSort(list(ArrayToSort))  # would use .copy() but processing isn't Python 3...
     
     if Algorithm == 'Bubble':
         SortedArray = BubbleSort(list(ArrayToSort))
@@ -173,9 +203,9 @@ def startSort():
     elif Algorithm == 'RadixLSD':
         SortedArray = RadixLSDSort(list(ArrayToSort))
     
-    
     isAnimating = True
     return
+
 
 #updates mouse position and checks if it's over any control boxes
 def update(x, y):
@@ -194,6 +224,7 @@ def update(x, y):
     OverRadixLSD = overRect(2.5*controlWidth, 2*controlHeight/3, controlWidth/2, controlHeight/3)
 
 
+#checks if the mouse has been clicked. if it has, checks if the mouse is over a control button and if so calls the appropriate function
 def mouseClick():
     global Algorithm, Algorithms
     if mousePressed:
@@ -204,60 +235,48 @@ def mouseClick():
             startSort()
         if OverBubble:
             Algorithm = 'Bubble'
-            print(Algorithm)
+            reset()
         if OverMerge:
             Algorithm = 'Merge'
-            print(Algorithm)
+            reset()
         if OverQuick:
             Algorithm = 'Quick'
-            print(Algorithm)
+            reset()
         if OverGravity:
             Algorithm = 'Gravity'
-            print(Algorithm)
+            reset()
         if OverCounting:
             Algorithm = 'Counting'
-            print(Algorithm)
+            reset()
         if OverRadixLSD:
             Algorithm = 'RadixLSD'
-            print(Algorithm)
+            reset()
     return
 
+#resets the current animation variables
+def reset():
+    global SortedArray, SortAnimations, AnimationIndex, isAnimating
+    isAnimating = False
+    SortedArray = []
+    SortAnimations = []
+    AnimationIndex = 0
+    return
+
+
 ####################################################################################################
-#functions for determining if the mouse is over a control button
+#function for determining if the mouse is over a control button
 def overRect(x, y, width, height):
     return x <= mouseX <= x+width and y <= mouseY <= y+height
-
-
-def overCircle(x, y, diameter):
-    distance = dist(x, y, mouseX, mouseY)
-    return distance < diameter/2
 
 
 ####################################################################################################
 #Sorting Algorithm Functions
 #all functions must use SortAnimations as a global variable and only return the final sorted array
 
+#swaps two elements in an array
 def swap(arr, ia, ib):
     arr[ia], arr[ib] = arr[ib], arr[ia]
     return arr
-
-
-def Merge(left, right):
-    Merged = []
-
-    while len(left) and len(right):
-        if left[0] <= right[0]:
-            Merged.append(left.pop(0))
-        else:
-            Merged.append(right.pop(0))
-
-    while len(left):
-        Merged.append(left.pop(0))
-
-    while len(right):
-        Merged.append(right.pop(0))
-
-    return Merged
 
 
 def BubbleSort(Arr):
@@ -274,14 +293,13 @@ def BubbleSort(Arr):
 
             if a > b:
                 Arr = swap(Arr, j, j+1)   
+            #records the indices being compared and if they should be swapped
             SortAnimations.append([j, j+1, a > b])
 
     return Arr
 
 
 def MergeSort(Arr):
-
-    global SortAnimations
 
     if len(Arr) <= 1:
         return Arr
@@ -306,6 +324,7 @@ def MergeSort(Arr):
     return Merge(left, right)
 
 
+#merges two arrays for MergeSort
 def Merge(left, right):
     
     global SortAnimations
@@ -347,16 +366,16 @@ def Merge(left, right):
 
     return Merged
 
-
-def HoarePartition(arr, start, end):
+#Hoare Partition function for QuickSort
+def HoarePartition(arr, startindex, endindex):
 
     global SortAnimations
 
-    pivotIndex = int((end + start)/2)
+    pivotIndex = int((endindex + startindex)/2)
     pivot = arr[pivotIndex]
 
-    i = start - 1
-    j = end + 1
+    i = startindex - 1
+    j = endindex + 1
 
     while True:
 
@@ -368,8 +387,8 @@ def HoarePartition(arr, start, end):
             j -= 1
         if i >= j:
             return j
-
-        SortAnimations.append([start, end, pivotIndex, i, j])
+        #records the ends of the sub array and the pivot index as well as the two indices being checked
+        SortAnimations.append([startindex, endindex, pivotIndex, i, j])
         swap(arr, i, j)
         
         
@@ -383,8 +402,6 @@ def QuickSort(arr, start, end):
         QuickSort(Sorted, pivot + 1, end)
 
     return Sorted
-
-
 
 
 def GravitySort(arr):
@@ -433,7 +450,6 @@ def RadixLSDSort(arr):
     base = 10
     LSD = 1
 
-    # for x in range(len(str(maxValue))):  # instead of while loop?
     while (maxValue - minValue) / LSD >= 1:
         arr = RadixCountSort(arr, LSD, base, minValue)
         SortAnimations.append(arr)
@@ -442,6 +458,7 @@ def RadixLSDSort(arr):
     return arr
 
 
+#modified counting sort for RadixLSDSort
 def RadixCountSort(arr, LSD, base, minValue):
 
     count = [0 for x in range(base)]
@@ -466,6 +483,7 @@ def RadixCountSort(arr, LSD, base, minValue):
 #Drawing functions for sorting algorithms
 #draws an array of rectangles
 def drawArray(arr, rectwidth, fillcolor):
+    push()
     #translate to bottom left corner, +x is right, -y is up
     translate(0, height)
     
@@ -474,13 +492,13 @@ def drawArray(arr, rectwidth, fillcolor):
         fill(*fillcolor)
         rect(index*rectwidth, 0, rectwidth, -0.85*value)
     
-    #translate back to origin
-    translate(0, -height)
+    pop()
     return
 
 
 #draws a single rectangle
 def drawSingleRect(value, index, rectwidth, fillcolor):
+    push()
     #translate to bottom left corner, +x is right, -y is up
     translate(0, height)
     
@@ -488,9 +506,19 @@ def drawSingleRect(value, index, rectwidth, fillcolor):
     fill(*fillcolor)
     rect(index*rectwidth, 0, rectwidth, -0.85*value)
     
-    #translate back to origin
-    translate(0, -height)
-    
+    pop()
+    return
+
+
+def drawPreSort(arr):
+    push()
+    pop()
+    return
+
+
+def drawPostSort(arr):
+    push()
+    pop()
     return
 
 
