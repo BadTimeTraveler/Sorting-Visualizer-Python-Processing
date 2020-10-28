@@ -19,3 +19,13 @@ Begin by selecting the array size and framerate using the two center scrollbars.
 [Counting Sort](https://en.wikipedia.org/wiki/Counting_sort): Integer sorting algorithm, counts the number of distinct values and then uses arithmetic to determine the final position of each value.
 
 [RadixLSD Sort](https://en.wikipedia.org/wiki/Radix_sort): Sorts values by their radix(base) using counting sort for each radix. Starts with the Least Significant Digit and finishes with the Most Significant Digit.
+
+## Demo
+
+### Quick Sort
+
+![github](Gifs/Quick.gif)
+
+### Merge Sort
+
+![github](Gifs/Merge.gif)
